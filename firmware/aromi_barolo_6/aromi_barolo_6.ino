@@ -102,6 +102,7 @@ void setup() {
 
   //bagna il jeans
   while (!jeansWet) {
+    check_jeans();
     bagna();
   }
   ferma();
@@ -285,10 +286,10 @@ void aziona_fans() {
 
 //CHECK JEANS
 void check_jeans() {
-  if ((analogRead(sensorPIN) <= (WET_TRESHOLD + IST) {
+  if (analogRead(sensorPIN) <= (WET_TRESHOLD + IST)) {
     jeansWet = false;
   }
-  else if if ((analogRead(sensorPIN) > (WET_TRESHOLD - IST) {
+  else if (analogRead(sensorPIN) > (WET_TRESHOLD - IST)) {
     jeansWet = true;
   }
 }
@@ -328,10 +329,16 @@ void leds_ready() {
       brightnessFake++;
     }
     else {
-      brightness++;
-      brightnessFake++;
+      if ((millis() - lastStep) > 4) {
+        lastStep = millis();
+        brightness++;
+        brightnessFake++;
+      }
     }
   }
+
+  //stai su
+
   //scendi
   else {
     if (brightnessFake < 1) {
@@ -344,10 +351,15 @@ void leds_ready() {
       brightnessFake--;
     }
     else {
-      brightness--;
-      brightnessFake--;
+      if ((millis() - lastStep) > 4) {
+        lastStep = millis();
+        brightness--;
+        brightnessFake--;
+      }
     }
   }
+
+  //stai giu
 
   analogWrite(ledPIN, brightness);
 }
