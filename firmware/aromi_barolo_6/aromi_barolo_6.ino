@@ -27,6 +27,7 @@
 #define emergencyTime 40000
 
 #define fakeMAX 5000
+#define fakeMIN 2000
 #define brightOK 255
 #define brightKO 30
 #define SMOOTH 15
@@ -162,7 +163,7 @@ void loop() {
     //Pulsante NON premuto + jeans bagnato
     ferma();
 
-    leds_ready();
+    leds_ready(brightOK, fakeMAX);
 
   }
   else if (count && jeansWet) {
@@ -188,12 +189,12 @@ void loop() {
     //Pulsante NON premuto + jeans asciutto
     ferma();
 
-    leds_ko();
+    leds_ready(brightKO, fakeMIN);
 
   }
   else if (count && !jeansWet) {
     //Pulsante premuto + jeans asciutto
-    leds_charge();
+    leds_charge(brightOK, fakeMIN);
 
     /*
       Bagno il jeans fino al segnale asciutto
@@ -362,7 +363,7 @@ void leds_on() {
 }
 
 
-void leds_charge() {
+void leds_charge(uint8_t brightMax, uint8_t fakeMax) {
   if (ledRise) {
     if (brightnessFake > fakeMax) {
       brightness = brightMax;
