@@ -22,13 +22,16 @@
 #define fanSpeed 130
 #define fanTime 1000
 
-#define retroTime 25000
+#define retroTime 1000
 
 #define emergencyTime 40000
 
-#define fakeMAX 1000
+#define fakeMAX 5000
 #define brightOK 255
-#define brightKO 100
+#define brightKO 30
+#define SMOOTH 15
+
+int smooth = 0;
 
 bool pump_mode = false;
 
@@ -108,17 +111,17 @@ void setup() {
   ferma();
 }
 
-//// LLLLLLOOOOOOOOOOOOOOOOPPPPPPPP 
+//// LLLLLLOOOOOOOOOOOOOOOOPPPPPPPP
 
 void loop() {
   //MODO POMPA
   /*
-  Se all'accensione tengo premuto il pulsante per più
-  di 1 secondo ma meno di 5 entro nella modalità
-  PUMP_MODE
+    Se all'accensione tengo premuto il pulsante per più
+    di 1 secondo ma meno di 5 entro nella modalità
+    PUMP_MODE
 
-  In cui posso gestire la pompa riempiendo e svuotando
-  interagendo solamente con il pulsante
+    In cui posso gestire la pompa riempiendo e svuotando
+    interagendo solamente con il pulsante
   */
   if (pump_mode) {
     while (1) {
@@ -128,25 +131,25 @@ void loop() {
 
   //PULSANTE
   /*
-  legge lo stato del pulsante, gestisce il debounce,
-  aggiorna 2 contatori:
+    legge lo stato del pulsante, gestisce il debounce,
+    aggiorna 2 contatori:
 
     count++
     bigCount++
 
-  ed una variabile booleana:
+    ed una variabile booleana:
 
     premuto (true=schiacciato, false=non-schiacciato)
 
-  ad ogni pulsata
+    ad ogni pulsata
   */
   leggi_pulsante();
 
 
   //JEANS
   /*
-  Controlla lo stato del jeans e aggiorna una 
-  variabile booleana
+    Controlla lo stato del jeans e aggiorna una
+    variabile booleana
 
     jeansWet (true=bagnato, false=asciutto)
 
@@ -168,17 +171,12 @@ void loop() {
 
     leds_on();
 
-    /*
-    Faccio cadere una goccia
-    */
-    goccia();
-    
     //FANS
     /*
-    Se premuto == true allora aziona le ventole
-    per un tempo pari a == fanTime
+      Se premuto == true allora aziona le ventole
+      per un tempo pari a == fanTime
 
-    poi count a 0
+      poi count a 0
 
     */
     aziona_fans();
@@ -198,7 +196,7 @@ void loop() {
     leds_charge();
 
     /*
-    Bagno il jeans fino al segnale asciutto
+      Bagno il jeans fino al segnale asciutto
     */
     bagna();
 
@@ -294,25 +292,6 @@ void check_jeans() {
   }
 }
 
-//GOCCIA
-void goccia() {
-
-  if ((tempCount >= pushDrop) && !drop) {
-    bagna();
-    lastDrop = millis();
-    drop = true;
-  }
-  else if ((tempCount < pushDrop) && !drop) {
-    tempCount++;
-  }
-
-  if (((millis() - lastDrop) > dropTime) && drop) {
-    ferma();
-    drop = false;
-    tempCount = 0;
-  }
-}
-
 
 
 //LED FADE
@@ -329,7 +308,13 @@ void leds_ready() {
       brightnessFake++;
     }
     else {
-      if ((millis() - lastStep) > 4) {
+      if (brightnessFake > brightOK * 0.75) {
+        smooth = SMOOTH;
+      }
+      else {
+        smooth = SMOOTH * 2;
+      }
+      if ((millis() - lastStep) > smooth) {
         lastStep = millis();
         brightness++;
         brightnessFake++;
@@ -346,12 +331,18 @@ void leds_ready() {
       brightnessFake = 0;
       ledRise = true;
     }
-    else if (brightnessFake < (fakeMAX-brightOK)) {
+    else if (brightnessFake < (fakeMAX - brightOK)) {
       brightness = 0;
       brightnessFake--;
     }
     else {
-      if ((millis() - lastStep) > 4) {
+      if (brightnessFake > brightOK * 0.75) {
+        smooth = SMOOTH;
+      }
+      else {
+        smooth = SMOOTH * 2;
+      }
+      if ((millis() - lastStep) > smooth) {
         lastStep = millis();
         brightness--;
         brightnessFake--;
@@ -390,6 +381,7 @@ void leds_on() {
 
 
 void leds_ko() {
+
   //sali
   if (ledRise) {
     if (brightnessFake > fakeMAX) {
@@ -402,10 +394,22 @@ void leds_ko() {
       brightnessFake++;
     }
     else {
-      brightness++;
-      brightnessFake++;
+      if (brightnessFake > brightKO * 0.75) {
+        smooth = SMOOTH;
+      }
+      else {
+        smooth = SMOOTH * 2;
+      }
+      if ((millis() - lastStep) > smooth) {
+        lastStep = millis();
+        brightness++;
+        brightnessFake++;
+      }
     }
   }
+
+  //stai su
+
   //scendi
   else {
     if (brightnessFake < 1) {
@@ -413,15 +417,26 @@ void leds_ko() {
       brightnessFake = 0;
       ledRise = true;
     }
-    else if (brightnessFake < (fakeMAX-brightKO)) {
+    else if (brightnessFake < (fakeMAX - brightKO)) {
       brightness = 0;
       brightnessFake--;
     }
     else {
-      brightness--;
-      brightnessFake--;
+      if (brightnessFake > brightKO * 0.75) {
+        smooth = SMOOTH;
+      }
+      else {
+        smooth = SMOOTH * 2;
+      }
+      if ((millis() - lastStep) > smooth) {
+        lastStep = millis();
+        brightness--;
+        brightnessFake--;
+      }
     }
   }
+
+  //stai giu
 
   analogWrite(ledPIN, brightness);
 }
@@ -459,7 +474,7 @@ void bagna() {
     ferma();
     stato_emergenza(true);
   }
-  
+
 }
 
 void asciuga() {
@@ -485,4 +500,3 @@ void stato_emergenza(bool stato) {
   }
 
 }
-
