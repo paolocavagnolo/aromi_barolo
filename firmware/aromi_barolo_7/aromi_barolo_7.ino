@@ -163,7 +163,7 @@ void loop() {
     //Pulsante NON premuto + jeans bagnato
     ferma();
 
-    leds_fade(brightOK, fakeMAX, SMOOTH);
+    leds_fade(brightOK, waitMAX, SMOOTH, false);
 
   }
   else if (count && jeansWet) {
@@ -189,12 +189,12 @@ void loop() {
     //Pulsante NON premuto + jeans asciutto
     ferma();
 
-    leds_fade(brightKO, fakeMIN, SMOOTH/2);
+    leds_fade(brightKO, waitMIN, ceil(SMOOTH/2), false);
 
   }
   else if (count && !jeansWet) {
     //Pulsante premuto + jeans asciutto
-    leds_charge(brightOK, fakeMIN);
+    leds_fade(brightOK, waitMIN, ceil(SMOOTH/2), true);
 
     /*
       Bagno il jeans fino al segnale asciutto
@@ -271,7 +271,7 @@ void leggi_pulsante() {
 
 //FANS
 void aziona_fans() {
-  if (premuto && !fanState) {
+  if (count && !fanState) {
     analogWrite(fanPIN, fanSpeed);
     lastFan = millis();
     fanState = true;
@@ -297,7 +297,7 @@ void check_jeans() {
 
 
 //LED FADE
-void leds_fade(uint8_t brightMax, uint16_t wait, uint8_t sm) {
+void leds_fade(uint8_t brightMax, uint16_t wait, uint8_t sm, bool saw) {
   if (ledRise) {
     if (brightness == 0) {
       if ((millis() - lastLed) > wait) {
@@ -322,7 +322,12 @@ void leds_fade(uint8_t brightMax, uint16_t wait, uint8_t sm) {
   else {
     if (brightness == brightMax) {
       if ((millis() - lastLed) > wait) {
-        brightness--;
+        if (saw) {
+          brightness = 0;
+        }
+        else {
+          brightness--;
+        }
       }
     }
 
@@ -344,44 +349,8 @@ void leds_fade(uint8_t brightMax, uint16_t wait, uint8_t sm) {
 void leds_on() {
 
   brightness = 255;
-  brightnessFake = fakeMAX;
 
 }
-
-
-void leds_charge(uint8_t brightMax, uint16_t wait, uint8_t sm) {
-  
-  if (ledRise) {
-    if (brightness == 0) {
-      if ((millis() - lastLed) > wait) {
-        brightness++;
-      }
-    }
-
-    else if (brightness >= brightMax) {
-      brightness = brightMax;
-      ledRise = false;
-      lastLed = millis();
-    }
-
-    else {
-      if ((millis() - lastStep) > sm) {
-        lastStep = millis();
-        brightness++;
-      }
-    }
-  }
-
-  else {
-    if (brightness == brightMax) {
-      if ((millis() - lastLed) > wait) {
-        brightness = 0;
-        ledRise = true;
-      }
-    }
-  }
-}
-
 
 
 //ALTRO
