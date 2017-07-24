@@ -202,6 +202,8 @@ void loop() {
 
   }
 
+  analogWrite(ledPIN, brightness);
+
 
 }
 
@@ -293,22 +295,21 @@ void check_jeans() {
 }
 
 
-
 //LED FADE
-void leds_ready() {
-  //sali
+void leds_ready(uint8_t brightMax, uint8_t fakeMax) {
+
   if (ledRise) {
-    if (brightnessFake > fakeMAX) {
-      brightness = brightOK;
-      brightnessFake = fakeMAX;
+    if (brightnessFake > fakeMax) {
+      brightness = brightMax;
+      brightnessFake = fakeMax;
       ledRise = false;
     }
-    else if (brightnessFake >= brightOK) {
-      brightness = brightOK;
+    else if (brightnessFake >= brightMax) {
+      brightness = brightMax;
       brightnessFake++;
     }
     else {
-      if (brightnessFake > brightOK * 0.75) {
+      if (brightnessFake > brightMax * 0.75) {
         smooth = SMOOTH;
       }
       else {
@@ -322,21 +323,18 @@ void leds_ready() {
     }
   }
 
-  //stai su
-
-  //scendi
   else {
     if (brightnessFake < 1) {
       brightness = 0;
       brightnessFake = 0;
       ledRise = true;
     }
-    else if (brightnessFake < (fakeMAX - brightOK)) {
+    else if (brightnessFake < (fakeMax - brightMax)) {
       brightness = 0;
       brightnessFake--;
     }
     else {
-      if (brightnessFake > brightOK * 0.75) {
+      if (brightnessFake > brightMax * 0.75) {
         smooth = SMOOTH;
       }
       else {
@@ -349,56 +347,38 @@ void leds_ready() {
       }
     }
   }
-
-  //stai giu
-
-  analogWrite(ledPIN, brightness);
+  
 }
 
 void leds_on() {
   // LED FADE IN //
   if (premuto) {
-    if (brightness >= brightOK) {
-      brightness = brightOK;
-    }
-    else {
-      brightness++;
-    }
+    brightness = 255;
   }
   // LED FADE OUT //
   else {
-    if (brightness < 1) {
-      brightness = 0;
-    }
-    else {
-      if ((millis() - (lastPush)) > fanTime) {
-        brightness--;
-      }
-    }
+    brightness = 0;
   }
-  analogWrite(ledPIN, brightness);
 }
 
 
-void leds_ko() {
-
-  //sali
+void leds_charge() {
   if (ledRise) {
-    if (brightnessFake > fakeMAX) {
-      brightness = brightKO;
-      brightnessFake = fakeMAX;
+    if (brightnessFake > fakeMax) {
+      brightness = brightMax;
+      brightnessFake = fakeMax;
       ledRise = false;
     }
-    else if (brightnessFake >= brightKO) {
-      brightness = brightKO;
+    else if (brightnessFake >= brightMax) {
+      brightness = brightMax;
       brightnessFake++;
     }
     else {
-      if (brightnessFake > brightKO * 0.75) {
-        smooth = SMOOTH;
+      if (brightnessFake > brightMax * 0.75) {
+        smooth = SMOOTH/2;
       }
       else {
-        smooth = SMOOTH * 2;
+        smooth = SMOOTH;
       }
       if ((millis() - lastStep) > smooth) {
         lastStep = millis();
@@ -408,52 +388,10 @@ void leds_ko() {
     }
   }
 
-  //stai su
-
-  //scendi
-  else {
-    if (brightnessFake < 1) {
-      brightness = 0;
-      brightnessFake = 0;
-      ledRise = true;
-    }
-    else if (brightnessFake < (fakeMAX - brightKO)) {
-      brightness = 0;
-      brightnessFake--;
-    }
-    else {
-      if (brightnessFake > brightKO * 0.75) {
-        smooth = SMOOTH;
-      }
-      else {
-        smooth = SMOOTH * 2;
-      }
-      if ((millis() - lastStep) > smooth) {
-        lastStep = millis();
-        brightness--;
-        brightnessFake--;
-      }
-    }
-  }
-
-  //stai giu
-
-  analogWrite(ledPIN, brightness);
-}
-
-void leds_charge() {
-  if (ledRise) {
-    if (brightness >= brightOK) {
-      brightness = brightOK;
-      ledRise = false;
-    }
-  }
   else {
     brightness = 0;
     ledRise = true;
   }
-
-  analogWrite(ledPIN, brightness);
 }
 
 
