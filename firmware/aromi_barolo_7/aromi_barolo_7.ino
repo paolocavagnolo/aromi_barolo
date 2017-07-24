@@ -14,7 +14,7 @@
 #define ledPIN 6
 
 #define sensorPIN A5
-#define WET_TRESHOLD 400
+#define WET_TRESHOLD 200
 #define IST 20
 
 #define pushDrop 4
@@ -23,7 +23,7 @@
 #define fanSpeed 130
 #define fanTime 1000
 
-#define retroTime 1000
+#define retroTime 25000
 
 #define emergencyTime 40000
 
@@ -72,6 +72,7 @@ bool pumpStart = true;
 bool ledRise = true;
 
 void setup() {
+  
   pinMode(buttonPIN, INPUT_PULLUP);
   pinMode(pumpPIN_A, OUTPUT);
   pinMode(pumpPIN_B, OUTPUT);
@@ -101,13 +102,11 @@ void setup() {
     digitalWrite(ledPIN, HIGH);
     while (1) {}
   }
-
   //turn andrera
   long retroStart = millis();
   while ((millis() - retroStart) < retroTime) {
     asciuga();
   }
-
   //bagna il jeans
   while (!jeansWet) {
     check_jeans();
@@ -215,40 +214,23 @@ void loop() {
 //MODO POMPA
 void modo_pompa() {
   // PULSANTE //
-  if ((!digitalRead(buttonPIN)) && primo) {
-    lastDebounceTime = millis();
-    primo = false;
-  }
-  if (((millis() - lastDebounceTime) > debounceDelay) && !primo) {
-    if (!digitalRead(buttonPIN)) {
-      premuto = true;
-    }
-    else {
-      premuto = false;
-      primo = true;
-      lastPush = (unsigned long)(millis() - lastDebounceTime);
-    }
-  }
+  leggi_pulsante();
 
-  if (count % 3 == 0) {
-    ferma();
+  if (count == 0) {
+    //non fare niente
+  }
+  if (count == 1) {
+    digitalWrite(pumpPIN_A, HIGH);
+    digitalWrite(pumpPIN_B, LOW);
+  }
+  if (count == 2) {
+    digitalWrite(pumpPIN_A, LOW);
+    digitalWrite(pumpPIN_B, HIGH);
+  }
+  if (count == 3) {
     count = 0;
   }
-  else if (count % 3 == 1) {
-    asciuga();
-    count = 1;
-  }
-  else if (count % 3 == 2) {
-    bagna();
-    count = 2;
-  }
-
-  timeLed = 1000 - 400 * count;
-  if ((millis() - lastLed) > timeLed) {
-    digitalWrite(ledPIN, ledState);
-    ledState = !ledState;
-    lastLed = millis();
-  }
+  
 }
 
 //PULSANTE
