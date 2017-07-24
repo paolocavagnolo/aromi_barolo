@@ -93,7 +93,7 @@ void setup() {
   }
 
   //big counter in da flash
-  bigCount = EEPROMWritelong(MEM, 0);
+  bigCount = EEPROMReadlong(MEM);
 
   //emergency
   if (EEPROM.read(ADDR) == 5) {
@@ -258,6 +258,7 @@ void leggi_pulsante() {
     primo = false;
     count++;
     bigCount++;
+    EEPROMWritelong(MEM,bigCount);
   }
   if (((millis() - lastDebounceTime) > debounceDelay) && !primo) {
     if (!digitalRead(buttonPIN)) {
