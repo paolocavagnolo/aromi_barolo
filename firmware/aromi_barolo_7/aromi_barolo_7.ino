@@ -26,8 +26,8 @@
 
 #define emergencyTime 40000
 
-#define fakeMAX 5000
-#define fakeMIN 2000
+#define waitMAX 1000
+#define waitMIN 500
 #define brightOK 255
 #define brightKO 30
 #define SMOOTH 15
@@ -297,46 +297,48 @@ void check_jeans() {
 
 
 //LED FADE
-void leds_fade(uint8_t brightMax, uint16_t fakeMax, uint8_t sm) {
-
+void leds_fade(uint8_t brightMax, uint16_t wait, uint8_t sm) {
   if (ledRise) {
-    if (brightnessFake > fakeMax) {
+    if (brightness == 0) {
+      if ((millis() - lastLed) > wait) {
+        brightness++;
+      }
+    }
+
+    else if (brightness >= brightMax) {
       brightness = brightMax;
-      brightnessFake = fakeMax;
       ledRise = false;
+      lastLed = millis();
     }
-    else if (brightnessFake >= brightMax) {
-      brightness = brightMax;
-      brightnessFake++;
-    }
+
     else {
       if ((millis() - lastStep) > sm) {
         lastStep = millis();
         brightness++;
-        brightnessFake++;
       }
     }
   }
 
   else {
-    if (brightnessFake < 1) {
+    if (brightness == brightMax) {
+      if ((millis() - lastLed) > wait) {
+        brightness--;
+      }
+    }
+
+    else if (brightness < 1) {
       brightness = 0;
-      brightnessFake = 0;
       ledRise = true;
+      lastLed = millis();
     }
-    else if (brightnessFake < (fakeMax - brightMax)) {
-      brightness = 0;
-      brightnessFake--;
-    }
+
     else {
       if ((millis() - lastStep) > sm) {
         lastStep = millis();
         brightness--;
-        brightnessFake--;
       }
     }
   }
-
 }
 
 void leds_on() {
@@ -347,35 +349,36 @@ void leds_on() {
 }
 
 
-void leds_charge(int brightMax, int fakeMax) {
+void leds_charge(uint8_t brightMax, uint16_t wait, uint8_t sm) {
+  
   if (ledRise) {
-    if (brightnessFake > fakeMax) {
+    if (brightness == 0) {
+      if ((millis() - lastLed) > wait) {
+        brightness++;
+      }
+    }
+
+    else if (brightness >= brightMax) {
       brightness = brightMax;
-      brightnessFake = fakeMax;
       ledRise = false;
+      lastLed = millis();
     }
-    else if (brightnessFake >= brightMax) {
-      brightness = brightMax;
-      brightnessFake++;
-    }
+
     else {
-      if (brightnessFake > brightMax * 0.75) {
-        smooth = SMOOTH / 2;
-      }
-      else {
-        smooth = SMOOTH;
-      }
-      if ((millis() - lastStep) > smooth) {
+      if ((millis() - lastStep) > sm) {
         lastStep = millis();
         brightness++;
-        brightnessFake++;
       }
     }
   }
 
   else {
-    brightness = 0;
-    ledRise = true;
+    if (brightness == brightMax) {
+      if ((millis() - lastLed) > wait) {
+        brightness = 0;
+        ledRise = true;
+      }
+    }
   }
 }
 
